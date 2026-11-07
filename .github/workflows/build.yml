@@ -1,0 +1,45 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check application HTML
+        shell: pwsh
+        run: |
+          if (!(Test-Path "app/index.html")) {
+            Write-Error "Не найден app/index.html. Добавьте HTML-файл приложения в папку app с именем index.html."
+            exit 1
+          }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Windows EXE
+        run: npm run dist
+
+      - name: Upload EXE files
+        uses: actions/upload-artifact@v4
+        with:
+          name: umnye-finansy-windows
+          path: |
+            dist/*.exe
+          if-no-files-found: error
+          retention-days: 30
